@@ -1,0 +1,48 @@
+# SniffrAI Use Cases Configuration
+
+use_cases:
+  default:
+    keywords: []
+    output_format: "SnifferExtractSchema"
+    table_name: "sniffer_data_table"
+    unique_key: "phone"
+    update_if_exists: True
+  iocl:
+    keywords: ['iocl']
+    output_format: "IOCLExtractSchema"
+    table_name: "sniffer_data_table"
+    unique_key: "phone"
+    update_if_exists: True
+
+  lenders:  
+    keywords: ['interest','roi','mitc','term','condition','approved', 'foir', 'ltv', 'lap', 'home','roi', 'house','salaried','employed','credit score','score','profession','borrower', 'criteria','eligibility', 'property type', 'property']
+    scraper_system_message: "lenders_usecase_system_message_v2"
+    scraper_prompt: "lenders_usecase_prompt_v2"
+    output_format: "LendersGeminiSearchResponse"
+    table_name: "lenders_google_search"
+    unique_key: "lender"
+    update_if_exists: True
+
+  doctors:
+    keywords: ['doctors']
+    output_format: "SnifferExtractSchema"
+    table_name: "sniffer_data_table"
+    unique_key: "phone"
+    update_if_exists: True
+
+  advisorkhoj:
+    keywords: ['advisorkhoj']
+    output_format: "SnifferExtractSchema"
+    table_name: "sniffer_data_table"
+    unique_key: "phone"
+    update_if_exists: True
+
+  lenders_firecrawl:
+    keywords: ['interest','roi','mitc','term','condition','approved', 'foir', 'ltv', 'lap', 'home','roi', 'house','salaried','employed','credit score','score','profession','borrower', 'criteria','eligibility', 'property type', 'property']
+    scraper_system_message: "lenders_usecase_system_message_v2"
+    scraper_prompt: "lenders_usecase_prompt_v2"
+    refinement_prompt: "refinement_prompt_v2"
+    output_format: "LendersExtractSchema"
+    table_name: "lenders_data_table"
+    unique_key: "lender"
+    update_if_exists: True
