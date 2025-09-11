@@ -2,10 +2,40 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 ########################### Classification Agent Schemas ##############################
+class URLAnalysis(BaseModel):
+    domains: List[str] = Field(default_factory=list, description="List of domains extracted from the provided URLs")
+    paths: List[str] = Field(default_factory=list, description="Key path segments from the URLs")
+    query_params_present: List[str] = Field(default_factory=list, description="List of query parameter keys found in the URLs")
+    inferred_context: Optional[str] = Field(None, description="Short inference from the URL structure, brand, section, locale, etc.")
+
+
+class TableSimilarity(BaseModel):
+    best_table: Optional[str] = Field(None, description="The most similar table name if found, otherwise null")
+    similarity_note: Optional[str] = Field(None, description="Reason why the table matches or why none match")
+    is_completely_different: bool = Field(False, description="True if query does not match any table, else False")
+
+
+class Entity(BaseModel):
+    entity: str = Field(..., description="Extracted entity text")
+    type: str = Field(..., description="Entity type, e.g., person, organization, product, location, date, other")
+
+class Prompt(BaseModel):
+    system_message: str = Field(None, description="The system message to use for the prompt")
+    prompt: str = Field(None, description="The prompt to use for the prompt")
+
 class ClassificationAgentRequest(BaseModel):
-    keyword: str = Field("Not Found", description="The schema to classify the data")
-    entity: str = Field(None, description="The name of item found (except the domain name) in the url or details provided to you by the user")
-    is_classified: bool = Field(False, description="Whether the data is classified")
+    keyword: str = Field("Not Found", description="The schema keyword chosen to classify the data")
+    is_classified: bool = Field(False, description="Whether the data is classified successfully with a schema keyword")
+    url_analysis: URLAnalysis = Field(default_factory=URLAnalysis, description="Structured analysis of the provided URLs")
+    table_similarity: TableSimilarity = Field(default_factory=TableSimilarity, description="Similarity comparison against database table names")
+    entity: str = Field(None, description="one wordname of item found (except the domain name) in the url or details provided to you by the user")
+    reasoning: Optional[str] = Field(None, description="Brief explanation of why the keyword was chosen")
+    prompt: Prompt = Field(default_factory=Prompt, description="The prompt to use for the prompt")
+
+# class ClassificationAgentRequest(BaseModel):
+#     keyword: str = Field("Not Found", description="The schema to classify the data")
+#     entity: str = Field(None, description="The name of item found (except the domain name) in the url or details provided to you by the user")
+#     is_classified: bool = Field(False, description="Whether the data is classified")
 
 ############################### Sniffer Generate Config Agent Schemas ####################################
 class TableColumns(BaseModel):

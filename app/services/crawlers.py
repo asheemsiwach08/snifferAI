@@ -71,34 +71,19 @@ class FirecrawlCrawler:
                     "error": str(e)
                     }
 
-    def search_data(self, input_data: str = None, timeout: int = 30000):
+    def search_data(self, input_data: str = None, limit: int = 3, timeout: int = 30000):
         try:
             response = self.app.search(
-                f"Search for the data of {input_data} in the web, if did not find any details then check from https://creditdharma.in/home-loan/home-loan-interest-rates-in-india-today/",
-                limit=3,
+                input_data,
+                limit=limit,
                 tbs="qdr:d",
                 timeout=timeout,
-                location="India"
+                location="India",
                 )
-            # Format the search response to a string
-            try:
-                search_response = {}
-                string = "" 
-                for record in response.data:
-                    string += record.get('title') + " --> " + record.get('description')[:5000] + ".\n"
-            except Exception as e:
-                print(f"Error formatting search response: {e}")
-                return {"success": False, 
-                        "data": None,
-                        "status":"Not defined",
-                        "token_usage":{"prompt_token":0,"completion_token":0, "output_token":0, "total_token":0},
-                        "error": str(e)
-                        }
-            search_response[input_data] = string
 
             return {
                         "success": response.success, 
-                        "data": search_response,
+                        "data": response,
                         "status":"Completed",
                         "token_usage":{"prompt_token":0,"completion_token":0, "output_token":0, "total_token":0},
                         "error": response.error

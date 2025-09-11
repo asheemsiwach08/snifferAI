@@ -169,8 +169,6 @@ def read_config():
 
 ########################################## Validators ##########################################
 def validate_request_input(request: SnifferAIRequest):
-    if not request.urls:
-        raise HTTPException(status_code=400, detail="URLs are required - Please provide the URLs to scrape")
     if not request.googleSearch and not request.snifferTool:
         raise HTTPException(status_code=400, detail="Please enable google search or sniffer tool")
     return True
@@ -196,23 +194,65 @@ def sniffer_ai(request: SnifferAIRequest):
 
     ###################################### Classicfication Agent ##############################################
     schema_keywords = usecases + ["Not Found"]
+    table_names = ['advisorkhoj', 'justdial']
 
-    messages = [{"role": "system", 
-    "content": f"""You are a helpful assistant whose task is to classify the data based on the keywords provided.
-        Keywords provided: {schema_keywords}
-        You have to select only one keyword matching the urls or details provided to you by the user, if you are
-        not able to find any matching keyword, then select the 'Not Found' keyword.""", 
-    }, 
-    {"role": "user", 
-    "content": f"""Classify the data based on the urls or details provided to you by the user.
-    URLS:  {request.urls}
-    Details:  {request.prompt}"""}]
+    messages = [
+        {
+            "role": "system",
+            "content": f"""
+        You are a careful classifier. Your job is to pick exactly ONE keyword based on the provided list.
+
+        - Keywords: {schema_keywords}
+
+        Rules:
+        1) Analyze URL details when provided:
+        - Extract domain (e.g., example.com), subdomain, TLD, path segments, and notable query parameters.
+        - Infer any obvious context from the URL itself (brand, product/page type, locale, category).
+        - Consider this URL-derived context when selecting the single best keyword.
+        - Also consider the user's query matching with the urls provided.
+
+        2) Compare the user's query against provided database table names:
+        - Table names: {table_names}
+        - Determine whether the query is most similar to one specific table name or completely different.
+        - Use semantic similarity on normalized tokens (singularized, lowercased; ignore punctuation and common stopwords).
+        - If tie, choose the table that captures more of the query’s core nouns/phrases.
+        - If everything is off-topic, mark it as "completely different".
+
+        3) Keyword selection:
+        - Select exactly ONE keyword from the list. If nothing fits, suggest the best keyword by yourself.
+        - Prefer precision over guesswork. If two are close, pick the one that aligns with both the query intent and any URL-derived context.
+
+        4) Determinism & clarity:
+        - Be concise.
+        - Do not invent data not implied by the inputs.
+        - Output MUST be valid JSON only (no extra text).
+
+        5) Prompting:
+        - Based on the all the details with you, write a detailed prompt for extracting the data from the url.
+        - It should include major steps to be taken to extract the data from the url.
+
+        """
+        },
+        {
+            "role": "user",
+            "content": f"""
+        Classify the data based on the URLs or details provided by the user.
+
+        URLs: {request.urls}
+        Details: {request.prompt}
+        Table names: {table_names}
+        """
+        }
+        ]
+
     
     # CA.1 --> Classification Agent
     classification_agent_response = openai_analyzer.analyze_context(model="gpt-4o-mini",messages=messages, response_format=ClassificationAgentRequest)
     classification_agent_response = classification_agent_response.get("data", {})
     logger.info(f"Classification agent response: {classification_agent_response}")
+    breakpoint()
 
+    
     # CA.2 --> Classification Agent Response
     if classification_agent_response:
         entity = classification_agent_response.get("entity", None)
