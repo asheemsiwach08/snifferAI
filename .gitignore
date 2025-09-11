@@ -243,6 +243,7 @@ site/
 # SniffrAI specific
 app/testing/advisers/*.csv
 app/testing/approved_projects/*.csv
+app/testing/*.ipynb
 database_setup/
 webpage_extractor.py
 gemini_test.py
